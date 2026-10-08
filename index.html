@@ -507,6 +507,7 @@ const CONFIG = {
     return fetch(CONFIG.ENDPOINT, {
       method: 'POST',
       mode: 'no-cors',
+      keepalive: true,   // 페이지를 바로 닫아도 전송이 끝까지 진행되게
       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
       body: JSON.stringify(payload)
     });
@@ -617,7 +618,8 @@ const CONFIG = {
     let saved = false;
     if (CONFIG.ENDPOINT && !payload.website) {
       try {
-        await send(payload);
+        // 구글 서버 응답은 몇 초 걸릴 수 있어서, 1.5초 안에 실패하지 않으면 접수된 것으로 보고 넘어간다
+        await Promise.race([send(payload), new Promise(r => setTimeout(r, 1500))]);
         saved = true;
       } catch (err) {
         btn.disabled = false;
